@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const TaskSchema = moongose.Schema({
+const TaskSchema = Schema({
     description: {
         type: String,
         required: true,
@@ -11,6 +11,6 @@ const TaskSchema = moongose.Schema({
     },
 });
 
-const taskModel = moongose.model("Task", TaskSchema);
+const taskModel = model("Task", TaskSchema);
 
 module.exports = taskModel;
