@@ -1,4 +1,7 @@
 const TaskModel = require("../models/task.model");
+const { notFoundError, objectIdError } = require("../errors/mongodb.errors");
+const { notAllowedFieldsToUpdateError } = require("../errors/general.errors");
+const { Mongoose } = require("mongoose");
 
 class TaskController {
     constructor(req, res) {
@@ -21,12 +24,13 @@ class TaskController {
 
             const task = await TaskModel.findById(taskId);
             if (!task) {
-                return this.res
-                    .status(404)
-                    .send("Essa tarefa não foi encontrada!");
+                return notFoundError(this.res);
             }
             return this.res.status(200).send(task);
         } catch (error) {
+            if (error instanceof Mongoose.Error.CastError) {
+                return objectIdError(this.res);
+            }
             this.res.status(500).send(error.message);
         }
     }
@@ -50,6 +54,10 @@ class TaskController {
 
             const taskToUpdate = await TaskModel.findById(taskId);
 
+            if (!taskToUpdate) {
+                return notFoundError(this.res);
+            }
+
             const allowedUpdate = ["isCompleted"];
             const requestedUpdates = Object.keys(taskData);
 
@@ -57,14 +65,15 @@ class TaskController {
                 if (allowedUpdate.includes(update)) {
                     taskToUpdate[update] = taskData[update];
                 } else {
-                    return this.res
-                        .status(500)
-                        .send("Um ou mais campos inseridos não são editáveis!");
+                    notAllowedFieldsToUpdateError(this.res);
                 }
             }
             await taskToUpdate.save();
             return this.res.status(200).send(taskToUpdate);
         } catch (error) {
+            if (error instanceof Mongoose.Error.CastError) {
+                return objectIdError(this.res);
+            }
             return this.res.status(500).send(error.message);
         }
     }
@@ -75,13 +84,16 @@ class TaskController {
 
             const taskToDelete = await TaskModel.findById(taskId);
             if (!taskToDelete) {
-                return this.res.status(404).send("Tarefa não encontrada!");
+                return notFoundError(this.res);
             }
 
             const deletedTask = await TaskModel.findByIdAndDelete(taskId);
 
             this.res.status(200).send("Task Deleted!");
         } catch (error) {
+            if (error instanceof Mongoose.Error.CastError) {
+                return objectIdError(this.res);
+            }
             this.res.status(500).send(error.message);
         }
     }
