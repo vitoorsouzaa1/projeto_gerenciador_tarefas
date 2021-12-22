@@ -1,21 +1,19 @@
 const express = require("express");
-const taskModel = require("../models/task.model");
+
+const TaskController = require("../controllers/task.controller");
+const TaskModel = require("../models/task.model");
+
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-    try {
-        const tasks = await taskModel.find({});
-        res.status(200).send(tasks);
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
+    return new TaskController(req, res).getTasks();
 });
 
 router.get("/:id", async (req, res) => {
     try {
         const taskId = req.params.id;
 
-        const task = await taskModel.findById(taskId);
+        const task = await TaskModel.findById(taskId);
         if (!task) {
             return res.status(404).send("Essa tarefa não foi encontrada!");
         }
@@ -27,7 +25,7 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
     try {
-        const newTask = new taskModel(req.body);
+        const newTask = new TaskModel(req.body);
 
         await newTask.save();
 
@@ -42,10 +40,9 @@ router.patch("/:id", async (req, res) => {
         const taskId = req.params.id;
         const taskData = req.body;
 
-        const taskToUpdate = await taskModel.findById(taskId);
+        const taskToUpdate = await TaskModel.findById(taskId);
 
         const allowedUpdate = ["isCompleted"];
-
         const requestedUpdates = Object.keys(taskData);
 
         for (update of requestedUpdates) {
@@ -68,12 +65,12 @@ router.delete("/:id", async (req, res) => {
     try {
         const taskId = req.params.id;
 
-        const taskToDelete = await taskModel.findById(taskId);
+        const taskToDelete = await TaskModel.findById(taskId);
         if (!taskToDelete) {
             return res.status(404).send("Tarefa não encontrada!");
         }
 
-        const deletedTask = await taskModel.findByIdAndDelete(taskId);
+        const deletedTask = await TaskModel.findByIdAndDelete(taskId);
 
         res.status(200).send("Task Deleted!");
     } catch (error) {
