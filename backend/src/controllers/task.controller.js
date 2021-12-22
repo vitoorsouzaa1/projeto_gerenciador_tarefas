@@ -6,7 +6,7 @@ class TaskController {
         this.res = res;
     }
 
-    async getTasks() {
+    async getAll() {
         try {
             const tasks = await TaskModel.find({});
             this.res.status(200).send(tasks);
@@ -15,7 +15,7 @@ class TaskController {
         }
     }
 
-    async getTaskById() {
+    async getById() {
         try {
             const taskId = this.req.params.id;
 
@@ -26,6 +26,61 @@ class TaskController {
                     .send("Essa tarefa não foi encontrada!");
             }
             return this.res.status(200).send(task);
+        } catch (error) {
+            this.res.status(500).send(error.message);
+        }
+    }
+
+    async createTask() {
+        try {
+            const newTask = new TaskModel(this.req.body);
+
+            await newTask.save();
+
+            this.res.status(200).send(newTask);
+        } catch (error) {
+            this.res.status(500).send(error.message);
+        }
+    }
+
+    async updateTask() {
+        try {
+            const taskId = this.req.params.id;
+            const taskData = this.req.body;
+
+            const taskToUpdate = await TaskModel.findById(taskId);
+
+            const allowedUpdate = ["isCompleted"];
+            const requestedUpdates = Object.keys(taskData);
+
+            for (const update of requestedUpdates) {
+                if (allowedUpdate.includes(update)) {
+                    taskToUpdate[update] = taskData[update];
+                } else {
+                    return this.res
+                        .status(500)
+                        .send("Um ou mais campos inseridos não são editáveis!");
+                }
+            }
+            await taskToUpdate.save();
+            return this.res.status(200).send(taskToUpdate);
+        } catch (error) {
+            return this.res.status(500).send(error.message);
+        }
+    }
+
+    async deleteTask() {
+        try {
+            const taskId = this.req.params.id;
+
+            const taskToDelete = await TaskModel.findById(taskId);
+            if (!taskToDelete) {
+                return this.res.status(404).send("Tarefa não encontrada!");
+            }
+
+            const deletedTask = await TaskModel.findByIdAndDelete(taskId);
+
+            this.res.status(200).send("Task Deleted!");
         } catch (error) {
             this.res.status(500).send(error.message);
         }
