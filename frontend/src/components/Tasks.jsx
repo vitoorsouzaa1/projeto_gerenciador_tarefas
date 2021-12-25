@@ -32,7 +32,7 @@ const Tasks = () => {
 
     useEffect(() => {
         fetchTasks();
-    }, []);
+    });
 
     return (
         <div className="tasks-container">
